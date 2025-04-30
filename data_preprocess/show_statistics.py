@@ -2,13 +2,11 @@
 import numpy as np
 import pandas as pd
 
-def show_statistics(dataframe: pd.DataFrame, first_parameter: str,
-                    second_parameter: str, clusters: pd.DataFrame) -> None:
+def show_statistics(dataframe: pd.DataFrame, parameters: list, clusters: pd.DataFrame) -> None:
     """
     Функция сбора статистики по кластерам
     :param dataframe: DataFrame с данными
-    :param first_parameter: Наименование первого параметра
-    :param second_parameter: Наименование второго параметра
+    :param parameters: Список параметров для кластеризации
     :param clusters: DataFrame с метками кластеров
     """
     # Статистика по кластерам
@@ -20,6 +18,6 @@ def show_statistics(dataframe: pd.DataFrame, first_parameter: str,
     # Вывод центров кластеров
     valid_clusters = [c for c in unique_clusters if c != -1]
     for cluster in valid_clusters:
-        cluster_points = dataframe[clusters == cluster][[f'{first_parameter}_clean', f'{second_parameter}_clean']]
+        cluster_points = dataframe[clusters == cluster][[f'{parameters[0]}_clean', f'{parameters[1]}_clean']]
         center = cluster_points.mean().values
         print(f"Центр кластера {cluster}: ({center[0]:.2f}, {center[1]:.2f})")

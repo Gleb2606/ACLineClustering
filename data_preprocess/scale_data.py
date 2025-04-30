@@ -10,19 +10,17 @@ class Float(Enum):
     FLOAT32 = np.float32
     FLOAT64 = np.float64
 
-def data_scale(name: str, first_parameter: str, second_parameter: str,
-               float_type: Float, samples: int) -> (pd.DataFrame, pd.DataFrame):
+def data_scale(name: str, parameters: list, float_type: Float, samples: int) -> (pd.DataFrame, pd.DataFrame):
     """
     Функция нормализации данных в датафрейме
     :param name: Наименование файла
-    :param first_parameter: Наименование первого параметра
-    :param second_parameter: Наименование второго параметра
+    :param parameters: Список параметров кластеризации
     :param float_type: Тип числа с плавающей точкой из перечисления
     :param samples: Количество данных в датафрейме (если 0 - то все)
     :return: Нормализованный и исходный DataFrame
     """
     # Загрузка датафрейма
-    df_clean = data_load(name, first_parameter, second_parameter)
+    df_clean, subset = data_load(name, parameters)
 
     # Сокращение данных в датафрейме (при необходимости)
     if samples != 0:
@@ -32,6 +30,6 @@ def data_scale(name: str, first_parameter: str, second_parameter: str,
     scaler = StandardScaler()
 
     # Нормализация данных
-    X = scaler.fit_transform(df_clean[[f"{first_parameter}_clean", f"{second_parameter}_clean"]])
+    X = scaler.fit_transform(df_clean[subset])
     X = X.astype(float_type.value)
     return X, df_clean
