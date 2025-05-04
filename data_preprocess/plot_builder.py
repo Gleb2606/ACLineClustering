@@ -1,6 +1,7 @@
 # Импорт необходимых библиотек
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.cluster.hierarchy import dendrogram
 import pandas as pd
 
 def plot(dataframe: pd.DataFrame, parameters: list,
@@ -38,4 +39,16 @@ def plot(dataframe: pd.DataFrame, parameters: list,
         cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
         cbar.set_label('Кластеры')
         fig.show()
+
+def dendrogram_builder(linkage: pd.array) -> None:
+    """
+    Функция для построения дендрограммы
+    :param linkage: DataFrame с иерархиями
+    """
+    plt.figure(figsize=(15, 7))
+    plt.title("Дендрограмма")
+    dendrogram(linkage, truncate_mode='level',
+               p=3, show_leaf_counts=False, leaf_rotation=90,
+               leaf_font_size=12, show_contracted=True)
+    plt.show()
 
