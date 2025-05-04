@@ -8,7 +8,7 @@ from clustering_methods.DBSCAN import DBSCANClustering
 class ClusteringApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Clustering Tool")
+        self.root.title("Кластеризация параметров")
         self.root.geometry("1200x800")
 
         self.clustering_processor = None
@@ -17,18 +17,16 @@ class ClusteringApp:
         self.create_widgets()
 
     def create_widgets(self):
-        # File Selection
-        self.file_frame = ttk.LabelFrame(self.root, text="File Selection")
+        # Выбор файла
+        self.file_frame = ttk.LabelFrame(self.root, text="Выбор файла")
         self.file_frame.pack(pady=10, padx=10, fill="x")
 
-        self.btn_browse = ttk.Button(self.file_frame, text="Browse CSV", command=self.load_file)
+        self.btn_browse = ttk.Button(self.file_frame, text="Загрузить файл", command=self.load_file)
         self.btn_browse.pack(side=tk.LEFT, padx=5)
 
-        # Parameters Selection
-        self.param_frame = ttk.LabelFrame(self.root, text="Select Parameters (2-3)")
+        # Выбор параметров
+        self.param_frame = ttk.LabelFrame(self.root, text="Выбор параметров для кластеризации")
         self.param_frame.pack(pady=10, padx=10, fill="x")
-
-        # Canvas and Scrollbar
         self.canvas = tk.Canvas(self.param_frame)
         self.scrollbar = ttk.Scrollbar(self.param_frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
@@ -46,22 +44,22 @@ class ClusteringApp:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # Clustering Controls
+        # Выполнение кластеризации
         self.ctrl_frame = ttk.Frame(self.root)
         self.ctrl_frame.pack(pady=10, padx=10, fill="x")
 
-        self.btn_cluster = ttk.Button(self.ctrl_frame, text="Run Clustering", command=self.run_clustering)
+        self.btn_cluster = ttk.Button(self.ctrl_frame, text="Выполнить кластеризацию", command=self.run_clustering)
         self.btn_cluster.pack(side=tk.LEFT, padx=5)
 
-        # Results Display
+        # Отображение результатов
         self.results_frame = ttk.Frame(self.root)
         self.results_frame.pack(pady=10, padx=10, fill="both", expand=True)
 
-        # Statistics
+        # Данные по кластерам
         self.stats_text = scrolledtext.ScrolledText(self.results_frame, height=10, wrap=tk.WORD)
         self.stats_text.pack(side=tk.LEFT, fill="both", expand=True, padx=5)
 
-        # Plot
+        # График
         self.plot_frame = ttk.Frame(self.results_frame)
         self.plot_frame.pack(side=tk.LEFT, fill="both", expand=True, padx=5)
 
@@ -92,22 +90,22 @@ class ClusteringApp:
                     self.checkboxes.append((col, var))
 
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to read file: {str(e)}")
+                messagebox.showerror("Ошибка", f"Ошибка при чтении файла: {str(e)}")
 
     def get_selected_parameters(self):
         return [col for col, var in self.checkboxes if var.get()]
 
     def run_clustering(self):
         if not self.current_file:
-            messagebox.showwarning("Warning", "Please select a CSV file first!")
+            messagebox.showerror("Ошибка", "Не загружен файл для кластеризации")
             return
 
         parameters = self.get_selected_parameters()
 
-        if len(parameters) not in [2, 3]:
-            messagebox.showwarning(
-                "Invalid Selection",
-                "Please select exactly 2 or 3 parameters for clustering!"
+        if len(parameters) < 2:
+            messagebox.showerror(
+                "Ошибка",
+                "Выберите от двух параметров для кластеризации"
             )
             return
 
@@ -124,7 +122,7 @@ class ClusteringApp:
             self.update_plot()
 
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Ошибка", str(e))
 
     def update_plot(self):
         for widget in self.plot_frame.winfo_children():
