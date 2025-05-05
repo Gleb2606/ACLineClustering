@@ -6,7 +6,14 @@ from clustering_methods.DBSCAN import DBSCANClustering
 
 
 class ClusteringApp:
+    """
+    Основной класс приложения
+    """
     def __init__(self, root):
+        """
+        Конструктор класса
+        :param root:
+        """
         self.root = root
         self.root.title("Кластеризация параметров")
         self.root.geometry("1200x800")
@@ -16,7 +23,10 @@ class ClusteringApp:
         self.current_file = None
         self.create_widgets()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
+        """
+        Метод создания виджетов
+        """
         # Выбор файла
         self.file_frame = ttk.LabelFrame(self.root, text="Выбор файла")
         self.file_frame.pack(pady=10, padx=10, fill="x")
@@ -63,7 +73,10 @@ class ClusteringApp:
         self.plot_frame = ttk.Frame(self.results_frame)
         self.plot_frame.pack(side=tk.LEFT, fill="both", expand=True, padx=5)
 
-    def load_file(self):
+    def load_file(self) -> None:
+        """
+        Метод загрузки файла
+        """
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if file_path:
             try:
@@ -92,10 +105,17 @@ class ClusteringApp:
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Ошибка при чтении файла: {str(e)}")
 
-    def get_selected_parameters(self):
+    def get_selected_parameters(self) -> list:
+        """
+        Метод получения выбранных параметров
+        :return: Массив выбранных параметров
+        """
         return [col for col, var in self.checkboxes if var.get()]
 
-    def run_clustering(self):
+    def run_clustering(self) -> None:
+        """
+        Метод выполнения кластеризации
+        """
         if not self.current_file:
             messagebox.showerror("Ошибка", "Не загружен файл для кластеризации")
             return
@@ -124,7 +144,10 @@ class ClusteringApp:
         except Exception as e:
             messagebox.showerror("Ошибка", str(e))
 
-    def update_plot(self):
+    def update_plot(self) -> None:
+        """
+        Метод построения графиков
+        """
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 
@@ -142,7 +165,7 @@ class ClusteringApp:
             )
             ax.set_xlabel(plot_data['parameters'][0])
             ax.set_ylabel(plot_data['parameters'][1])
-            ax.set_title('DBSCAN Clustering')
+            ax.set_title('Кластеризация')
             fig.colorbar(scatter, ax=ax, label='Clusters')
             ax.grid(True)
 
@@ -158,12 +181,11 @@ class ClusteringApp:
             ax.set_xlabel(plot_data['parameters'][0])
             ax.set_ylabel(plot_data['parameters'][1])
             ax.set_zlabel(plot_data['parameters'][2])
-            ax.set_title('DBSCAN Clustering')
+            ax.set_title('Кластеризация')
 
         canvas = FigureCanvasTkAgg(fig, self.plot_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
 
 if __name__ == "__main__":
     root = tk.Tk()

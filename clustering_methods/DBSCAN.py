@@ -5,7 +5,14 @@ from sklearn.neighbors import NearestNeighbors
 from data_preprocess.scale_data import data_scale, Float
 
 class DBSCANClustering:
+    """
+    Класс кластеризации методом DBSCAN
+    """
     def __init__(self, file_path: str):
+        """
+        Конструктор класса
+        :param file_path: Путь к файлу
+        """
         self.file_path = file_path
         self.original_parameters = []
         self.X = None
@@ -14,8 +21,11 @@ class DBSCANClustering:
         self.optimal_eps = None
         self.min_samples = None
 
-    def prepare_data(self, parameters: list):
-        """Подготовка и нормализация данных с очисткой предыдущих результатов"""
+    def prepare_data(self, parameters: list) -> None:
+        """
+        Подготовка и нормализация данных с очисткой предыдущих результатов
+        :param parameters: Список параметров кластеризации
+        """
         # Сброс предыдущих данных
         self.X = None
         self.df_clean = None
@@ -32,8 +42,10 @@ class DBSCANClustering:
         )
         self.original_parameters = parameters
 
-    def calculate_hyperparameters(self):
-        """Автоматический расчет оптимальных гиперпараметров"""
+    def calculate_hyperparameters(self) -> None:
+        """
+        Автоматический расчет оптимальных гиперпараметров
+        """
         self.min_samples = len(self.original_parameters) * self.X.shape[1]
         neigh = NearestNeighbors(n_neighbors=self.min_samples)
         nbrs = neigh.fit(self.X)
@@ -43,8 +55,12 @@ class DBSCANClustering:
         max_diff_idx = np.argmax(differences)
         self.optimal_eps = k_distances[max_diff_idx]
 
-    def perform_clustering(self, parameters: list):
-        """Выполнение кластеризации DBSCAN"""
+    def perform_clustering(self, parameters: list) -> pd.DataFrame:
+        """
+        Выполнение кластеризации DBSCAN
+        :param parameters: Список параметров кластеризации
+        :return: Датафрейм сформированных кластеров
+        """
         if self.original_parameters != parameters:
             self.prepare_data(parameters)
 
@@ -54,8 +70,11 @@ class DBSCANClustering:
         self.clusters = dbscan.fit_predict(self.X)
         return self.clusters
 
-    def get_statistics(self):
-        """Получение статистики по кластерам"""
+    def get_statistics(self) -> str:
+        """
+        Метод получения статистики по кластерам
+        :return: Статистика по кластерам
+        """
         if self.clusters is None:
             return "Кластеризация не выполнена"
 
@@ -76,8 +95,11 @@ class DBSCANClustering:
 
         return "".join(stats)
 
-    def get_plot_data(self):
-        """Возвращает данные для построения графиков"""
+    def get_plot_data(self) -> dict:
+        """
+        Метод получения данных для построения графиков
+        :return: Данные для построения графиков
+        """
         return {
             'df_clean': self.df_clean,
             'parameters': self.original_parameters,

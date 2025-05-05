@@ -4,7 +4,14 @@ from data_preprocess.scale_data import *
 from data_preprocess.show_statistics import *
 
 class AffinityPropagation:
+    """
+    Класс кластеризации методом Affinity propagation
+    """
     def __init__(self, file_path: str):
+        """
+        Конструктор класса
+        :param file_path: Путь к файлу
+        """
         self.file_path = file_path
         self.original_parameters = []
         self.X = None
@@ -13,8 +20,11 @@ class AffinityPropagation:
         self.damping = 0.7
         self.random_state = 42
 
-    def prepare_data(self, parameters: list):
-        """Подготовка и нормализация данных с очисткой предыдущих результатов"""
+    def prepare_data(self, parameters: list) -> None:
+        """
+        Метод подготовки и нормализации данных с очисткой предыдущих результатов
+        :param parameters: Список параметров кластеризации
+        """
         # Сброс предыдущих данных
         self.X = None
         self.df_clean = None
@@ -33,8 +43,12 @@ class AffinityPropagation:
         """Автоматический расчет оптимальных гиперпараметров"""
         # В разработке...
 
-    def perform_clustering(self, parameters: list):
-        """Выполнение кластеризации AffinityPropagation"""
+    def perform_clustering(self, parameters: list) -> pd.DataFrame:
+        """
+        Метод выполнения кластеризации AffinityPropagation
+        :param parameters: Список параметров кластеризации
+        :return: Датафрейм сформированных кластеров
+        """
         if self.original_parameters != parameters:
             self.prepare_data(parameters)
 
@@ -44,8 +58,11 @@ class AffinityPropagation:
         self.clusters = affinity.fit_predict(self.X)
         return self.clusters
 
-    def get_statistics(self):
-        """Получение статистики по кластерам"""
+    def get_statistics(self) -> str:
+        """
+        Метод получения статистики по кластерам
+        :return: Статистика по кластерам
+        """
         if self.clusters is None:
             return "Кластеризация не выполнена"
 
@@ -66,8 +83,11 @@ class AffinityPropagation:
 
         return "".join(stats)
 
-    def get_plot_data(self):
-        """Возвращает данные для построения графиков"""
+    def get_plot_data(self) -> dict:
+        """
+        Метод получения данных для построения графиков
+        :return: Данные для построения графиков
+        """
         return {
             'df_clean': self.df_clean,
             'parameters': self.original_parameters,

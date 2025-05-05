@@ -4,7 +4,14 @@ from data_preprocess.scale_data import *
 from data_preprocess.show_statistics import *
 
 class GaussianMixture:
+    """
+    Класс кластеризации методом Гауссовских смесей
+    """
     def __init__(self, file_path: str):
+        """
+        Конструктор класса
+        :param file_path: Путь к файлу
+        """
         self.file_path = file_path
         self.original_parameters = []
         self.X = None
@@ -12,8 +19,11 @@ class GaussianMixture:
         self.clusters = None
         self.optimal_n = None
 
-    def prepare_data(self, parameters: list):
-        """Подготовка и нормализация данных с очисткой предыдущих результатов"""
+    def prepare_data(self, parameters: list) -> None:
+        """
+        Подготовка и нормализация данных с очисткой предыдущих результатов
+        :param parameters: Список параметров кластеризации
+        """
         # Сброс предыдущих данных
         self.X = None
         self.df_clean = None
@@ -29,8 +39,10 @@ class GaussianMixture:
         )
         self.original_parameters = parameters
 
-    def calculate_hyperparameters(self):
-        """Автоматический расчет оптимальных гиперпараметров"""
+    def calculate_hyperparameters(self) -> None:
+        """
+        Автоматический расчет оптимальных гиперпараметров
+        """
         bic = []
         n_components_range = range(1, 11)
         for n in n_components_range:
@@ -41,8 +53,12 @@ class GaussianMixture:
         # Выбор оптимального числа кластеров
         self.optimal_n = n_components_range[np.argmin(bic)]
 
-    def perform_clustering(self, parameters: list):
-        """Выполнение кластеризации GaussianMixture"""
+    def perform_clustering(self, parameters: list) -> pd.DataFrame:
+        """
+        Выполнение кластеризации GaussianMixture
+        :param parameters: Список параметров кластеризации
+        :return: Датафрейм сформированных кластеров
+        """
         if self.original_parameters != parameters:
             self.prepare_data(parameters)
 
@@ -52,8 +68,11 @@ class GaussianMixture:
         self.clusters = gmm.fit_predict(self.X)
         return self.clusters
 
-    def get_statistics(self):
-        """Получение статистики по кластерам"""
+    def get_statistics(self) -> str:
+        """
+        Метод получения статистики по кластерам
+        :return: Статистика по кластерам
+        """
         if self.clusters is None:
             return "Кластеризация не выполнена"
 
@@ -74,8 +93,11 @@ class GaussianMixture:
 
         return "".join(stats)
 
-    def get_plot_data(self):
-        """Возвращает данные для построения графиков"""
+    def get_plot_data(self) -> dict:
+        """
+        Метод получения данных для построения графиков
+        :return: Данные для построения графиков
+        """
         return {
             'df_clean': self.df_clean,
             'parameters': self.original_parameters,

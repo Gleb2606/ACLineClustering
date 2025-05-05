@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 
-
 def clean_column(column: pd.DataFrame) -> pd.Series:
     """
     Функция преобразования данных в столбце датафрейма
