@@ -2,7 +2,6 @@
 from scipy.cluster.hierarchy import linkage
 from sklearn.cluster import AgglomerativeClustering
 from data_preprocess.scale_data import *
-from data_preprocess.plot_builder import *
 from data_preprocess.show_statistics import *
 
 class AgglomerativeClustering:
@@ -46,8 +45,8 @@ class AgglomerativeClustering:
 
         self.calculate_hyperparameters()
 
-        dbscan = AgglomerativeClustering(n_clusters=optimal_num_clusters, linkage='ward')
-        self.clusters = dbscan.fit_predict(self.X)
+        ac = AgglomerativeClustering(n_clusters=self.optimal_num_clusters, linkage='ward')
+        self.clusters = ac.fit_predict(self.X)
         return self.clusters
 
     def get_statistics(self):
