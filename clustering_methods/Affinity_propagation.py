@@ -1,7 +1,6 @@
 # Импорт необходимых библиотек
 from sklearn.cluster import AffinityPropagation
 from data_preprocess.scale_data import *
-from data_preprocess.plot_builder import *
 from data_preprocess.show_statistics import *
 
 class AffinityPropagation:
