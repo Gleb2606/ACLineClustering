@@ -3,7 +3,11 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from clustering_methods.DBSCAN import DBSCANClustering
-
+from clustering_methods.Affinity_propagation import AffinityPropagationClustering
+from clustering_methods.Agglomerative_clustering import AgglomerativeClustering
+from clustering_methods.gaussian_mixture import GaussianMixtureClustering
+from clustering_methods.k_means import KMeansClustering
+from clustering_methods.mean_shift import MeanShiftClustering
 
 class ClusteringApp:
     """
@@ -53,6 +57,29 @@ class ClusteringApp:
 
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
+
+        # Выбор метода кластеризации
+        self.algo_frame = ttk.Labelframe(self.root, text="Выбор алгоритма")
+        self.algo_frame.pack(pady=10, padx=10, fill="x")
+
+        self.selected_algorithm = tk.StringVar()
+        algorithms = [
+            ("DBSCAN", "DBSCAN"),
+            ("Agglomerative", "AgglomerativeClustering"),
+            ("k-Means", "KMeans"),
+            ("Mean Shift", "MeanShift"),
+            ("Gaussian", "GaussianMixture"),
+            ("Affinity Propagation", "AffinityPropagation")
+        ]
+
+        for text, value in  algorithms:
+            rb = ttk.Radiobutton(
+                self.algo_frame,
+                text=text,
+                variable=self.selected_algorithm,
+                value=value
+            )
+            rb.pack(side=tk.LEFT, padx=5)
 
         # Выполнение кластеризации
         self.ctrl_frame = ttk.Frame(self.root)
@@ -124,7 +151,12 @@ class ClusteringApp:
             messagebox.showerror("Ошибка", "Не загружен файл для кластеризации")
             return
 
+        algorithm = self.selected_algorithm.get()
         parameters = self.get_selected_parameters()
+
+        if not algorithm:
+            messagebox.showwarning("Ошибка", "Не выбран алгоритм кластеризации")
+            return
 
         if len(parameters) < 2:
             messagebox.showerror(
@@ -134,19 +166,26 @@ class ClusteringApp:
             return
 
         try:
-            # Создаем новый процессор для каждой кластеризации
-            self.clustering_processor = DBSCANClustering(self.current_file)
+            # Создание соответствующего обработчика
+            processor_classes = {
+                "DBSCAN": DBSCANClustering,
+                "AffinityPropagation": AffinityPropagationClustering,
+                "KMeans": KMeansClustering,
+                "AgglomerativeClustering": AgglomerativeClustering,
+                "GaussianMixture": GaussianMixtureClustering,
+                "MeanShift": MeanShiftClustering
+            }
+
+            self.clustering_processor = processor_classes[algorithm](self.current_file)
             self.clustering_processor.perform_clustering(parameters)
 
-            # Обновление статистики
+            # Обновление интерфейса
             self.stats_text.delete(1.0, tk.END)
             self.stats_text.insert(tk.END, self.clustering_processor.get_statistics())
-
-            # Обновление графика
             self.update_plot()
 
         except Exception as e:
-            messagebox.showerror("Ошибка", str(e))
+            messagebox.showerror("Error", str(e))
 
     def update_plot(self) -> None:
         """

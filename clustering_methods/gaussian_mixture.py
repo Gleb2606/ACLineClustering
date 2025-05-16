@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from clustering_methods.Base_clustering import BaseClustering
 
-class GaussianMixture(BaseClustering):
+class GaussianMixtureClustering(BaseClustering):
     """
     Класс кластеризации методом Гауссовых смесей
     """

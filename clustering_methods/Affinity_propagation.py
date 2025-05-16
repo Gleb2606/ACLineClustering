@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import AffinityPropagation
 from clustering_methods.Base_clustering import BaseClustering
 
-class AffinityPropagation(BaseClustering):
+class AffinityPropagationClustering(BaseClustering):
     """
     Класс кластеризации методом Affinity propagation
     """

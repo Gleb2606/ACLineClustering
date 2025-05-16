@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import MeanShift
 from clustering_methods.Base_clustering import BaseClustering
 
-class MeanShift(BaseClustering):
+class MeanShiftClustering(BaseClustering):
     """
     Класс кластеризации методом среднего сдвига
     """

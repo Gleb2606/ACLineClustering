@@ -33,9 +33,6 @@ class BaseClustering(ABC):
         Метод подготовки и нормализации данных с очисткой предыдущих результатов
         :param parameters: Список параметров кластеризации
         """
-        self.X = None
-        self.df_clean = None
-        self.clusters = None
         self.df_raw = pd.read_csv(self.file_path, sep=';')
         self.X, self.df_clean = data_scale(
             self.file_path,

@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from clustering_methods.Base_clustering import BaseClustering
 
-class KMeans(BaseClustering):
+class KMeansClustering(BaseClustering):
     """
     Класс кластеризации методом К-средних
     """
