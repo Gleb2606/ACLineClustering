@@ -61,6 +61,10 @@ class ClusteringApp:
         self.btn_cluster = ttk.Button(self.ctrl_frame, text="Выполнить кластеризацию", command=self.run_clustering)
         self.btn_cluster.pack(side=tk.LEFT, padx=5)
 
+        # Сохранение результата
+        self.btn_save = ttk.Button(self.ctrl_frame, text="Сохранить результат", command=self.save_results)
+        self.btn_save.pack(side=tk.LEFT, padx=5)
+
         # Отображение результатов
         self.results_frame = ttk.Frame(self.root)
         self.results_frame.pack(pady=10, padx=10, fill="both", expand=True)
@@ -186,6 +190,32 @@ class ClusteringApp:
         canvas = FigureCanvasTkAgg(fig, self.plot_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def save_results(self) -> None:
+        """
+        Метод сохранения результатов
+        """
+        if not self.clustering_processor or self.clustering_processor.clusters is None:
+            messagebox.showwarning("Warning", "Сначала выполните кластеризацию!")
+            return
+
+        try:
+            # Получаем данные для сохранения
+            save_df = self.clustering_processor.get_cluster_data()
+
+            # Диалог сохранения файла
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv")],
+                title="Сохранить результаты"
+            )
+
+            if file_path:
+                save_df.to_csv(file_path, sep=';', index=False)
+                messagebox.showinfo("Успех", "Файл успешно сохранен!")
+
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Ошибка при сохранении: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
