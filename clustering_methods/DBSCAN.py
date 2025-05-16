@@ -1,11 +1,11 @@
 # Импорт необходимых библиотек
 import pandas as pd
 import numpy as np
+from clustering_methods.Base_clustering import BaseClustering
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-from data_preprocess.scale_data import data_scale, Float
 
-class DBSCANClustering:
+class DBSCANClustering(BaseClustering):
     """
     Класс кластеризации методом DBSCAN
     """
@@ -14,36 +14,9 @@ class DBSCANClustering:
         Конструктор класса
         :param file_path: Путь к файлу
         """
-        self.file_path = file_path
-        self.original_parameters = []
-        self.X = None
-        self.df_raw = None
-        self.df_clean = None
-        self.clusters = None
+        super().__init__(file_path)
         self.optimal_eps = None
         self.min_samples = None
-
-    def prepare_data(self, parameters: list) -> None:
-        """
-        Подготовка и нормализация данных с очисткой предыдущих результатов
-        :param parameters: Список параметров кластеризации
-        """
-        # Сброс предыдущих данных
-        self.X = None
-        self.df_clean = None
-        self.clusters = None
-        self.optimal_eps = None
-        self.min_samples = None
-        self.df_raw = pd.read_csv(self.file_path, sep=';')
-
-        # Новая обработка данных
-        self.X, self.df_clean = data_scale(
-            self.file_path,
-            parameters,
-            Float.FLOAT64,
-            0
-        )
-        self.original_parameters = parameters
 
     def calculate_hyperparameters(self) -> None:
         """
@@ -72,50 +45,3 @@ class DBSCANClustering:
         dbscan = DBSCAN(eps=self.optimal_eps, min_samples=self.min_samples)
         self.clusters = dbscan.fit_predict(self.X)
         return self.clusters
-
-    def get_statistics(self) -> str:
-        """
-        Метод получения статистики по кластерам
-        :return: Статистика по кластерам
-        """
-        if self.clusters is None:
-            return "Кластеризация не выполнена"
-
-        stats = []
-        unique_clusters, counts = np.unique(self.clusters, return_counts=True)
-        stats.append("Статистика кластеров:\n")
-        for cluster, count in zip(unique_clusters, counts):
-            stats.append(f"Кластер {cluster} имеет {count} точек\n")
-
-        valid_clusters = [c for c in unique_clusters if c != -1]
-        for cluster in valid_clusters:
-            cluster_points = self.df_clean[self.clusters == cluster][
-                [f'{self.original_parameters[0]}_clean',
-                 f'{self.original_parameters[1]}_clean']
-            ]
-            center = cluster_points.mean().values
-            stats.append(f"Центр кластера {cluster}: ({center[0]:.2f}, {center[1]:.2f})\n")
-
-        return "".join(stats)
-
-    def get_plot_data(self) -> dict:
-        """
-        Метод получения данных для построения графиков
-        :return: Данные для построения графиков
-        """
-        return {
-            'df_clean': self.df_clean,
-            'parameters': self.original_parameters,
-            'clusters': self.clusters
-        }
-
-    def get_cluster_data(self) -> pd.DataFrame:
-        """
-        Метод получения кластеров
-        :return: Датафрейм, содержащий колонку с кластерами
-        """
-        result_df = self.df_raw.copy()
-        result_df['кластер'] = np.nan
-        result_df.loc[self.df_clean.index, 'кластер'] = self.clusters
-
-        return result_df

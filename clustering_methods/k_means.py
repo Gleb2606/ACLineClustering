@@ -1,9 +1,9 @@
 # Импорт необходимых библиотек
+import pandas as pd
 from sklearn.cluster import KMeans
-from data_preprocess.scale_data import *
-from data_preprocess.show_statistics import *
+from clustering_methods.Base_clustering import BaseClustering
 
-class KMeans:
+class KMeans(BaseClustering):
     """
     Класс кластеризации методом К-средних
     """
@@ -12,31 +12,8 @@ class KMeans:
         Конструктор класса
         :param file_path: Путь к файлу
         """
-        self.file_path = file_path
-        self.original_parameters = []
-        self.X = None
-        self.df_clean = None
-        self.clusters = None
+        super().__init__(file_path)
         self.n_clusters = 2
-
-    def prepare_data(self, parameters: list) -> None:
-        """
-        Подготовка и нормализация данных с очисткой предыдущих результатов
-        :param parameters: Список параметров кластеризации
-        """
-        # Сброс предыдущих данных
-        self.X = None
-        self.df_clean = None
-        self.clusters = None
-
-        # Новая обработка данных
-        self.X, self.df_clean = data_scale(
-            self.file_path,
-            parameters,
-            Float.FLOAT64,
-            0
-        )
-        self.original_parameters = parameters
 
     def calculate_hyperparameters(self) -> None:
         """
@@ -58,39 +35,3 @@ class KMeans:
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=42)
         self.clusters = kmeans.fit_predict(self.X)
         return self.clusters
-
-    def get_statistics(self) -> str:
-        """
-        Метод получения статистики по кластерам
-        :return: Статистика по кластерам
-        """
-        if self.clusters is None:
-            return "Кластеризация не выполнена"
-
-        stats = []
-        unique_clusters, counts = np.unique(self.clusters, return_counts=True)
-        stats.append("Статистика кластеров:\n")
-        for cluster, count in zip(unique_clusters, counts):
-            stats.append(f"Кластер {cluster} имеет {count} точек\n")
-
-        valid_clusters = [c for c in unique_clusters if c != -1]
-        for cluster in valid_clusters:
-            cluster_points = self.df_clean[self.clusters == cluster][
-                [f'{self.original_parameters[0]}_clean',
-                 f'{self.original_parameters[1]}_clean']
-            ]
-            center = cluster_points.mean().values
-            stats.append(f"Центр кластера {cluster}: ({center[0]:.2f}, {center[1]:.2f})\n")
-
-        return "".join(stats)
-
-    def get_plot_data(self) -> dict:
-        """
-        Метод получения данных для построения графиков
-        :return: Данные для построения графиков
-        """
-        return {
-            'df_clean': self.df_clean,
-            'parameters': self.original_parameters,
-            'clusters': self.clusters
-        }
