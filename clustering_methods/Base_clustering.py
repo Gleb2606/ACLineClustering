@@ -19,12 +19,28 @@ class BaseClustering(ABC):
         self.df_raw = None
         self.df_clean = None
         self.clusters = None
+        self.auto_params = True
 
     @abstractmethod
-    def perform_clustering(self, parameters: list) -> None:
+    def perform_clustering(self, parameters: list, user_params: dict) -> None:
         """
         Абстрактный метод выполнение кластеризации
         :param parameters: Список параметров кластеризации
+        :param user_params: Пользовательские значения гиперпарамтеров
+        """
+        pass
+
+    @abstractmethod
+    def get_default_params(self) -> None:
+        """
+        Абстрактный метод, возвращающий значения параметров по умолчанию
+        """
+        pass
+
+    @abstractmethod
+    def calculate_hyperparameters(self) -> None:
+        """
+        Абстрактный метод автоматического расчета гиперпараметров
         """
         pass
 

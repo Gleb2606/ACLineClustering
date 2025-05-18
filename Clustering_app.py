@@ -27,6 +27,11 @@ class ClusteringApp:
         self.current_file = None
         self.create_widgets()
 
+    def on_algorithm_select(self, event=None):
+        algorithm = self.selected_algorithm.get()
+        self.create_params_input(algorithm)
+        self.toggle_params_input()
+
     def create_widgets(self) -> None:
         """
         Метод создания виджетов
@@ -71,6 +76,7 @@ class ClusteringApp:
             ("Gaussian", "GaussianMixture"),
             ("Affinity Propagation", "AffinityPropagation")
         ]
+        self.selected_algorithm.trace_add('write', lambda *_: self.on_algorithm_select())
 
         for text, value in  algorithms:
             rb = ttk.Radiobutton(
@@ -80,6 +86,26 @@ class ClusteringApp:
                 value=value
             )
             rb.pack(side=tk.LEFT, padx=5)
+
+        # Подбор гиперпараметров
+        self.params_frame = ttk.LabelFrame(self.root, text="Значения гиперпараметров")
+        self.params_frame.pack(pady=10, padx=10, fill="x")
+
+        # Переключатель для автоматического подбора гиперпараметров
+        self.auto_params_var = tk.BooleanVar(value=True)
+        self.autoCheck = ttk.Checkbutton(
+            self.params_frame,
+            text="Автоматический подбор гиперпараметров",
+            variable=self.auto_params_var,
+            command=lambda: [self.toggle_params_input()]
+        )
+        self.autoCheck.pack(anchor='w', padx=5, pady=2)
+        self.autoCheck.pack(anchor='w', padx=5, pady=2)
+        self.autoCheck.configure(command=self.toggle_params_input)
+
+        # Контейнер для полей ввода
+        self.params_input_frame = ttk.Frame(self.params_frame)
+        self.params_input_frame.pack(fill="x", padx=5, pady=5)
 
         # Выполнение кластеризации
         self.ctrl_frame = ttk.Frame(self.root)
@@ -130,8 +156,9 @@ class ClusteringApp:
                         onvalue=True,
                         offvalue=False
                     )
+                    cb.var = var
                     cb.pack(anchor='w', padx=5, pady=2)
-                    self.checkboxes.append((col, var))
+                    self.checkboxes.append(cb)
 
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Ошибка при чтении файла: {str(e)}")
@@ -141,7 +168,85 @@ class ClusteringApp:
         Метод получения выбранных параметров
         :return: Массив выбранных параметров
         """
-        return [col for col, var in self.checkboxes if var.get()]
+        return [cb['text'] for cb in self.checkboxes if cb.var.get()]
+
+    def toggle_params_input(self) -> None:
+        """
+        Метод переключения состояния для полей ввода
+        """
+        state = 'disabled' if self.auto_params_var.get() else 'normal'
+        # Итерируемся только по полям ввода внутри params_input_frame
+        for child in self.params_input_frame.winfo_children():
+            if isinstance(child, ttk.Entry):
+                child.configure(state=state)
+
+    def create_params_input(self, algorithm: str) -> None:
+        """
+        Метод создания полей для выбранного алгоритма
+        :param algorithm: Выбранный алгоритм кластеризации
+        """
+        # Очистка предыдущих полей
+        for widget in self.params_input_frame.winfo_children():
+            widget.destroy()
+
+        processor_classes = {
+            "DBSCAN": DBSCANClustering,
+            "AffinityPropagation": AffinityPropagationClustering,
+            "KMeans": KMeansClustering,
+            "AgglomerativeClustering": AgglomerativeClustering,
+            "GaussianMixture": GaussianMixtureClustering,
+            "MeanShift": MeanShiftClustering
+        }
+
+        if algorithm not in processor_classes:
+            return
+
+        try:
+            # Создаем временный экземпляр для получения параметров
+            processor = processor_classes[algorithm]("dummy_path")
+            default_params = processor.get_default_params()
+
+            # Создание полей ввода
+            row = 0
+            for param, value in default_params.items():
+                label = ttk.Label(self.params_input_frame, text=f"{param}:")
+                label.grid(row=row, column=0, padx=5, pady=2, sticky='w')
+
+                entry = ttk.Entry(self.params_input_frame)
+                entry.insert(0, str(value))
+                entry.grid(row=row, column=1, padx=5, pady=2, sticky='ew')
+
+                if self.auto_params_var.get():
+                    entry.configure(state='disabled')
+
+                row += 1
+
+            self.params_input_frame.columnconfigure(1, weight=1)
+
+        except Exception as e:
+            print(f"Ошибка при создании полей ввода: {str(e)}")
+
+    def get_user_params(self) -> dict:
+        """
+        Метод возвращающий введенные пользователем параметры
+        :return: Словарь со введенными параметрами
+        """
+        params = {}
+        for child in self.params_input_frame.winfo_children():
+            if isinstance(child, ttk.Entry):
+                label_widget = self.params_input_frame.grid_slaves(
+                    row=child.grid_info()["row"],
+                    column=0
+                )[0]
+                param_name = label_widget.cget("text").replace(':', '')
+
+                # Преобразуем значение
+                try:
+                    value = float(child.get())
+                    params[param_name] = int(value) if value.is_integer() else value
+                except ValueError:
+                    params[param_name] = child.get()
+        return params
 
     def run_clustering(self) -> None:
         """
@@ -176,8 +281,16 @@ class ClusteringApp:
                 "MeanShift": MeanShiftClustering
             }
 
+            # Получение параметров
+            auto_params = self.auto_params_var.get()
+            user_params = self.get_user_params() if not auto_params else {}
+
+            # Инициализация обработчика
             self.clustering_processor = processor_classes[algorithm](self.current_file)
-            self.clustering_processor.perform_clustering(parameters)
+            self.clustering_processor.auto_params = auto_params
+
+            # Выполнение кластеризации
+            self.clustering_processor.perform_clustering(parameters, user_params)
 
             # Обновление интерфейса
             self.stats_text.delete(1.0, tk.END)
@@ -185,7 +298,7 @@ class ClusteringApp:
             self.update_plot()
 
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Ошибка", str(e))
 
     def update_plot(self) -> None:
         """

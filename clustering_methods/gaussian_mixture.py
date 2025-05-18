@@ -14,8 +14,16 @@ class GaussianMixtureClustering(BaseClustering):
         :param file_path: Путь к файлу
         """
         super().__init__(file_path)
-        self.clusters = None
         self.optimal_n = None
+
+    def get_default_params(self) -> dict:
+        """
+        Метод, возвращающий значения гиперпараметров по умолчанию
+        :return: Словарь со значениями гиперпараметров
+        """
+        return {
+            'optimal_n': self.optimal_n
+        }
 
     def calculate_hyperparameters(self) -> None:
         """
@@ -31,16 +39,20 @@ class GaussianMixtureClustering(BaseClustering):
         # Выбор оптимального числа кластеров
         self.optimal_n = n_components_range[np.argmin(bic)]
 
-    def perform_clustering(self, parameters: list) -> pd.DataFrame:
+    def perform_clustering(self, parameters: list, user_params: dict) -> pd.DataFrame:
         """
         Выполнение кластеризации GaussianMixture
         :param parameters: Список параметров кластеризации
+        :param user_params: Словарь с пользовательскими значениями гиперпараметров
         :return: Датафрейм сформированных кластеров
         """
         if self.original_parameters != parameters:
             self.prepare_data(parameters)
 
-        self.calculate_hyperparameters()
+        if self.auto_params:
+            self.calculate_hyperparameters()
+        else:
+            self.optimal_n = user_params.get('optimal_n', self.optimal_n)
 
         gmm = GaussianMixture(n_components=self.optimal_n, random_state=42)
         self.clusters = gmm.fit_predict(self.X)
