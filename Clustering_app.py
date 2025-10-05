@@ -9,10 +9,12 @@ from clustering_methods.gaussian_mixture import GaussianMixtureClustering
 from clustering_methods.k_means import KMeansClustering
 from clustering_methods.mean_shift import MeanShiftClustering
 
+
 class ClusteringApp:
     """
     Основной класс приложения
     """
+
     def __init__(self, root):
         """
         Конструктор класса
@@ -25,6 +27,7 @@ class ClusteringApp:
         self.clustering_processor = None
         self.checkboxes = []
         self.current_file = None
+        self.current_figure = None  # Для хранения текущей фигуры графика
         self.create_widgets()
 
     def on_algorithm_select(self, event=None):
@@ -78,7 +81,7 @@ class ClusteringApp:
         ]
         self.selected_algorithm.trace_add('write', lambda *_: self.on_algorithm_select())
 
-        for text, value in  algorithms:
+        for text, value in algorithms:
             rb = ttk.Radiobutton(
                 self.algo_frame,
                 text=text,
@@ -100,7 +103,6 @@ class ClusteringApp:
             command=lambda: [self.toggle_params_input()]
         )
         self.autoCheck.pack(anchor='w', padx=5, pady=2)
-        self.autoCheck.pack(anchor='w', padx=5, pady=2)
         self.autoCheck.configure(command=self.toggle_params_input)
 
         # Контейнер для полей ввода
@@ -117,6 +119,10 @@ class ClusteringApp:
         # Сохранение результата
         self.btn_save = ttk.Button(self.ctrl_frame, text="Сохранить результат", command=self.save_results)
         self.btn_save.pack(side=tk.LEFT, padx=5)
+
+        # Кнопка для показа графика в отдельном окне
+        self.btn_show_plot = ttk.Button(self.ctrl_frame, text="Показать график", command=self.show_plot_in_modal)
+        self.btn_show_plot.pack(side=tk.LEFT, padx=5)
 
         # Отображение результатов
         self.results_frame = ttk.Frame(self.root)
@@ -300,48 +306,111 @@ class ClusteringApp:
         except Exception as e:
             messagebox.showerror("Ошибка", str(e))
 
+    def create_plot_figure(self):
+        """
+        Создает фигуру matplotlib с графиком кластеризации
+        Возвращает объект Figure или None при ошибке
+        """
+        if not self.clustering_processor or self.clustering_processor.clusters is None:
+            return None
+
+        try:
+            plot_data = self.clustering_processor.get_plot_data()
+            fig = plt.figure(figsize=(6, 4), dpi=100)
+
+            if len(plot_data['parameters']) == 2:
+                ax = fig.add_subplot(111)
+                scatter = ax.scatter(
+                    plot_data['df_clean'][f"{plot_data['parameters'][0]}_clean"],
+                    plot_data['df_clean'][f"{plot_data['parameters'][1]}_clean"],
+                    c=plot_data['clusters'],
+                    cmap='viridis',
+                    alpha=0.6
+                )
+                ax.set_xlabel(plot_data['parameters'][0])
+                ax.set_ylabel(plot_data['parameters'][1])
+                ax.set_title('Кластеризация')
+                fig.colorbar(scatter, ax=ax, label='Clusters')
+                ax.grid(True)
+
+            elif len(plot_data['parameters']) == 3:
+                ax = fig.add_subplot(111, projection='3d')
+                scatter = ax.scatter(
+                    plot_data['df_clean'][f"{plot_data['parameters'][0]}_clean"],
+                    plot_data['df_clean'][f"{plot_data['parameters'][1]}_clean"],
+                    plot_data['df_clean'][f"{plot_data['parameters'][2]}_clean"],
+                    c=plot_data['clusters'],
+                    cmap='viridis'
+                )
+                ax.set_xlabel(plot_data['parameters'][0])
+                ax.set_ylabel(plot_data['parameters'][1])
+                ax.set_zlabel(plot_data['parameters'][2])
+                ax.set_title('Кластеризация')
+
+            return fig
+
+        except Exception as e:
+            messagebox.showerror("Ошибка построения графика", str(e))
+            return None
+
     def update_plot(self) -> None:
         """
-        Метод построения графиков
+        Метод построения графиков в основном окне
         """
+        # Очищаем предыдущий график
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 
-        plot_data = self.clustering_processor.get_plot_data()
-        fig = plt.figure(figsize=(6, 4), dpi=100)
+        # Закрываем предыдущую фигуру
+        if self.current_figure:
+            plt.close(self.current_figure)
+            self.current_figure = None
 
-        if len(plot_data['parameters']) == 2:
-            ax = fig.add_subplot(111)
-            scatter = ax.scatter(
-                plot_data['df_clean'][f"{plot_data['parameters'][0]}_clean"],
-                plot_data['df_clean'][f"{plot_data['parameters'][1]}_clean"],
-                c=plot_data['clusters'],
-                cmap='viridis',
-                alpha=0.6
-            )
-            ax.set_xlabel(plot_data['parameters'][0])
-            ax.set_ylabel(plot_data['parameters'][1])
-            ax.set_title('Кластеризация')
-            fig.colorbar(scatter, ax=ax, label='Clusters')
-            ax.grid(True)
+        # Создаем новую фигуру
+        self.current_figure = self.create_plot_figure()
+        if self.current_figure is None:
+            return
 
-        elif len(plot_data['parameters']) == 3:
-            ax = fig.add_subplot(111, projection='3d')
-            scatter = ax.scatter(
-                plot_data['df_clean'][f"{plot_data['parameters'][0]}_clean"],
-                plot_data['df_clean'][f"{plot_data['parameters'][1]}_clean"],
-                plot_data['df_clean'][f"{plot_data['parameters'][2]}_clean"],
-                c=plot_data['clusters'],
-                cmap='viridis'
-            )
-            ax.set_xlabel(plot_data['parameters'][0])
-            ax.set_ylabel(plot_data['parameters'][1])
-            ax.set_zlabel(plot_data['parameters'][2])
-            ax.set_title('Кластеризация')
-
-        canvas = FigureCanvasTkAgg(fig, self.plot_frame)
+        # Встраиваем график в интерфейс
+        canvas = FigureCanvasTkAgg(self.current_figure, self.plot_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def show_plot_in_modal(self) -> None:
+        """
+        Показывает график кластеризации в отдельном модальном окне
+        """
+        if not self.clustering_processor or self.clustering_processor.clusters is None:
+            messagebox.showwarning("Предупреждение", "Сначала выполните кластеризацию!")
+            return
+
+        # Создаем фигуру для модального окна
+        modal_figure = self.create_plot_figure()
+        if modal_figure is None:
+            return
+
+        # Создаем модальное окно
+        modal = tk.Toplevel(self.root)
+        modal.title("График кластеризации")
+        modal.geometry("800x600")
+        modal.transient(self.root)  # Делаем окно модальным
+        modal.grab_set()  # Захватываем фокус
+
+        # Создаем холст для графика
+        canvas = FigureCanvasTkAgg(modal_figure, master=modal)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Кнопка закрытия
+        btn_close = ttk.Button(modal, text="Закрыть", command=modal.destroy)
+        btn_close.pack(pady=10)
+
+        # Обработчик закрытия окна - освобождаем ресурсы
+        def on_closing():
+            plt.close(modal_figure)
+            modal.destroy()
+
+        modal.protocol("WM_DELETE_WINDOW", on_closing)
 
     def save_results(self) -> None:
         """
@@ -368,6 +437,7 @@ class ClusteringApp:
 
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка при сохранении: {str(e)}")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

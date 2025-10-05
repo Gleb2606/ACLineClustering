@@ -11,6 +11,8 @@ def clean_column(column: pd.DataFrame) -> pd.Series:
     cleaned = []
     for value in column:
         if isinstance(value, str):
+            #Заменяем запятые на точки
+            value = value.replace(',','.')
             #Удаление всех нецифровых символов, кроме точки
             cleaned_value = ''.join(filter(lambda x: x.isdigit() or x == '.', value))
             if cleaned_value:
